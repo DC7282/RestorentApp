@@ -20,10 +20,10 @@ public class UserRegistration {
 	@Column(nullable = false)
 	private String name;
 	
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String email;
 	
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true)
 	private String contact;
 	
 	@Column(nullable = false)
@@ -35,8 +35,8 @@ public class UserRegistration {
 	private int status;
 
 	@ManyToOne
-	@JoinColumn(name = "roll")
-	private Roll roll;
+	@JoinColumn(name = "role")
+	private Role role;
 
 	private String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH:mm.ss").format(new java.util.Date());
 
@@ -45,7 +45,7 @@ public class UserRegistration {
 	}
 
 	public UserRegistration(Long id, String name, String email, String contact, String password, String otp, int status,
-			com.dhiraj.model.Roll roll, String timeStamp) {
+			com.dhiraj.model.Role role, String timeStamp) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -54,7 +54,7 @@ public class UserRegistration {
 		this.password = password;
 		this.otp = otp;
 		this.status = status;
-		this.roll = roll;
+		this.role = role;
 		this.timeStamp = timeStamp;
 	}
 
@@ -122,12 +122,12 @@ public class UserRegistration {
 		this.timeStamp = timeStamp;
 	}
 
-	public Roll getRoll() {
-		return roll;
+	public Role getRole() {
+		return role;
 	}
 
-	public void setRoll(Roll roll) {
-		this.roll = roll;
+	public void setRole(Role role) {
+		this.role = role;
 	}
 
 }

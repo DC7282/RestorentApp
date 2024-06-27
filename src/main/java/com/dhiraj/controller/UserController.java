@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dhiraj.model.Roll;
+import com.dhiraj.model.Role;
 import com.dhiraj.model.UserRegistration;
 import com.dhiraj.services.UserService;
 
@@ -46,10 +46,10 @@ public class UserController {
 	@PostMapping("/verifyAccount")
 	public ResponseEntity<?> varifyAccount(@RequestBody UserRegistration userReg) {
 		try {
-			boolean verify = userServ.varifyAccount(userReg);
-			if (verify)
+			UserRegistration verify = userServ.varifyAccount(userReg);
+			if (verify!=null)
 				return new ResponseEntity<>("Account varify using otp Successfully", HttpStatus.OK);
-			return new ResponseEntity<>("Some problem is there", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>("Please enter valid OTP", HttpStatus.BAD_REQUEST);
 		} catch (EntityNotFoundException e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}
@@ -61,10 +61,14 @@ public class UserController {
 		try {
 			UserRegistration userData = userServ.userLogin(userReg);
 			if (userData != null) {
-				Roll roll = userData.getRoll();
-				request.getSession().setAttribute("uid", userData.getId());
-				request.getSession().setAttribute("uroll", roll.getRoll());
-				return new ResponseEntity<>(userData, HttpStatus.OK);
+					if(userData.getStatus()==1) {
+					Role role = userData.getRole();
+					request.getSession().setAttribute("uid", userData.getId());
+					request.getSession().setAttribute("urole", role.getRole());
+					return new ResponseEntity<>(userData, HttpStatus.OK);
+				}
+					return new ResponseEntity<>("please verify your account with OTP That is sended on your Mail ID",
+							HttpStatus.LOCKED);
 			}
 			return new ResponseEntity<>("Some problem is there please check your username and password",
 					HttpStatus.BAD_REQUEST);
@@ -76,10 +80,10 @@ public class UserController {
 	@PostMapping("/forgetPassword")
 	public ResponseEntity<?> forgetPassword(@RequestBody UserRegistration userReg) {
 		try {
-			boolean forget = userServ.forgetPassword(userReg);
-			if (forget)
+			UserRegistration forget = userServ.forgetPassword(userReg);
+			if (forget!=null)
 				return new ResponseEntity<>("OTP send succesfully on Email", HttpStatus.OK);
-			return new ResponseEntity<>("Some problem is there", HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>("Please enter correct email ID", HttpStatus.BAD_REQUEST);
 		} catch (EntityNotFoundException e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}

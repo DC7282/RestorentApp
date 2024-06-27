@@ -7,23 +7,23 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
-public class Roll {
+public class Role {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private String roll;
+	@Column(nullable = false, unique = true)
+	private String role;
 
-	public Roll() {
+	public Role() {
 		super();
 	}
 
-	public Roll(Long id, String roll) {
+	public Role(Long id, String role) {
 		super();
 		this.id = id;
-		this.roll = roll;
+		this.role = role;
 	}
 
 	public Long getId() {
@@ -34,11 +34,11 @@ public class Roll {
 		this.id = id;
 	}
 
-	public String getRoll() {
-		return roll;
+	public String getRole() {
+		return role;
 	}
 
-	public void setRoll(String roll) {
-		this.roll = roll;
+	public void setRole(String role) {
+		this.role = role;
 	}
 }

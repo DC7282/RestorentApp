@@ -71,31 +71,20 @@ public class UserService {
 
 	}
 
-	public boolean varifyAccount(UserRegistration userReg) {
+	public UserRegistration varifyAccount(UserRegistration userReg) {
 
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
-		if (user.getOtp().equals(userReg.getOtp())) {
-			user.setStatus(1);
-			user.setOtp(null);
-			userRegRepo.save(user);
-			return true;
+		if(user!=null) {
+			if (user.getOtp().equals(userReg.getOtp())) {
+				user.setStatus(1);
+				user.setOtp(null);
+				return userRegRepo.save(user);
+			}
 		}
-		return false;
+		return null;
 	}
-//	try {
-//		UserRegistration user = userRegRepo.findByEmail(email);
-//		String from = sender;
-//		String to = email;
-//		String subject = "Account Varification";
-//		String content = "Dear "+user.getName()+", <br> You account varification for Registration OTP is <br>"
-//				+ "<h3></h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
-//				
-//		sendMail(from, to, subject, content);
-//	}catch(Exception e) {
-//		
-//	}
 
-	public boolean forgetPassword(UserRegistration userReg) {
+	public UserRegistration forgetPassword(UserRegistration userReg) {
 		try {
 			UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
 			user.setOtp(generateOTP(6));
@@ -106,10 +95,9 @@ public class UserService {
 					+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
 
 			sendMail(from, to, subject, content);
-			userRegRepo.save(user);
-			return true;
+			return userRegRepo.save(user);
 		} catch (Exception e) {
-			return false;
+			return null;
 		}
 
 	}
@@ -133,12 +121,16 @@ public class UserService {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
 		try {
 			if (user.getOtp() != null) {
+				user.setOtp(generateOTP(6));
 				String from = sender;
 				String to = userReg.getEmail();
 				String subject = "Forget Password";
 				String content = "Dear " + user.getName() + ", <br> Your forget password OTP is <br>" + "<h3>"
 						+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
+
 				sendMail(from, to, subject, content);
+				userRegRepo.save(user);
+				return true;
 			}
 			return true;
 		} catch (Exception e) {
