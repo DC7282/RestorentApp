@@ -1,140 +1,149 @@
 package com.dhiraj.services;
 
-import java.util.Random;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.dhiraj.model.Role;
 import com.dhiraj.model.UserRegistration;
+import com.dhiraj.repository.RoleRepository;
 import com.dhiraj.repository.UserRegistrationRepository;
-
-import jakarta.mail.internet.MimeMessage;
+import com.dhiraj.resources.GenerateOTP;
+import com.dhiraj.resources.PasswordEncryptAndDecrypt;
+import com.dhiraj.resources.SendMail;
 
 @Service("userServ")
 public class UserService {
 
 	@Autowired
 	private UserRegistrationRepository userRegRepo;
-
+	
 	@Autowired
-	private JavaMailSender mailSender;
-
-	public static String generateOTP(int length) {
-		String numbers = "0123456789";
-		Random rndm_method = new Random();
-		char[] otp = new char[length];
-		for (int i = 0; i < length; i++) {
-			otp[i] = numbers.charAt(rndm_method.nextInt(numbers.length()));
-		}
-		return new String(otp);
-	}
+	private RoleRepository roleRepo;
 
 	@Value("${spring.mail.username}")
 	private String sender;
+	
+	@Autowired
+	private GenerateOTP otp;
+	
+	@Autowired
+	private SendMail sendMail;
+	
+	@Autowired
+	private PasswordEncryptAndDecrypt passEncDec;
 
-	private void sendMail(String from, String to, String subject, String content) {
-		try {
-			MimeMessage message = mailSender.createMimeMessage();
-			MimeMessageHelper helper = new MimeMessageHelper(message);
-
-			helper.setFrom(from);
-			helper.setTo(to);
-			helper.setSubject(subject);
-			helper.setText(content, true);
-			mailSender.send(message);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public List<Role> getRole() {
+		return roleRepo.findAll();
 	}
-
-	public boolean saveData(UserRegistration userReg) {
-		userReg.setOtp(generateOTP(6));
-		userReg.setStatus(0);
-		try {
-			String from = sender;
-			String to = userReg.getEmail();
-			String subject = "Account Varification";
-			String content = "Dear " + userReg.getName()
-					+ ", <br> Your account varification for Registration OTP is <br>" + "<h3>" + userReg.getOtp()
-					+ "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
-
-			sendMail(from, to, subject, content);
-			userRegRepo.save(userReg);
-			return true;
-		} catch (Exception e) {
-			return false;
-		}
-
-	}
-
-	public UserRegistration varifyAccount(UserRegistration userReg) {
-
-		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
-		if(user!=null) {
-			if (user.getOtp().equals(userReg.getOtp())) {
-				user.setStatus(1);
-				user.setOtp(null);
-				return userRegRepo.save(user);
+	
+	public String saveData(UserRegistration userReg) {
+		if (userRegRepo.findByEmail(userReg.getEmail()) == null) {
+			if (userRegRepo.findByContact(userReg.getContact()) == null) {
+				userReg.setOtp(otp.generateOTP(6, userReg.getEmail()));
+				userReg.setStatus(0);
+				userReg.setPassword(passEncDec.encrypt(userReg.getPassword()));
+				try {
+					String from = sender;
+					String to = userReg.getEmail();
+					String subject = "Account Varification";
+					String content = "Dear " + userReg.getName()
+							+ ", <br> Your account varification for Registration OTP is <br>" + "<h3>"
+							+ userReg.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
+					sendMail.sendMail(from, to, subject, content);
+					userRegRepo.save(userReg);
+					return "Success";
+				} catch (Exception e) {
+					return "Some problem is there. Please try again some time";
+				}
 			}
+			return "Contact Already Exist";
 		}
-		return null;
+		return "Email Already Exist";
+	}
+
+	public String varifyAccount(UserRegistration userReg) {
+		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
+		if (user != null) {
+			if(user.getOtp() != null) {
+				if (user.getOtp().equals(userReg.getOtp())) {
+					user.setStatus(1);
+					user.setOtp(null);
+					userRegRepo.save(user);
+					return "Success";
+				}
+				return "Please Enter Valid OTP";
+			}
+			return "OTP is Expired. Please regenerate OTP";
+		}
+		return "User dose not exist";
 	}
 
 	public UserRegistration forgetPassword(UserRegistration userReg) {
 		try {
 			UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
-			user.setOtp(generateOTP(6));
+			user.setOtp(otp.generateOTP(6, userReg.getEmail()));
 			String from = sender;
 			String to = userReg.getEmail();
 			String subject = "Forget Password";
 			String content = "Dear " + user.getName() + ", <br> Your forget password OTP is <br>" + "<h3>"
 					+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
-
-			sendMail(from, to, subject, content);
+			sendMail.sendMail(from, to, subject, content);
 			return userRegRepo.save(user);
 		} catch (Exception e) {
 			return null;
 		}
-
 	}
 
-	public boolean forgetPasswordSet(UserRegistration userReg) {
+	public UserRegistration forgetEmail(UserRegistration userReg) {
+		return userRegRepo.findByContact(userReg.getContact());
+	}
+	
+	public String forgetPasswordSet(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
-		if (user.getOtp().equals(userReg.getOtp())) {
-			user.setPassword(userReg.getPassword());
-			user.setOtp(null);
-			userRegRepo.save(user);
-			return true;
+		if (user != null) {
+			if(user.getOtp() != null) {
+				if (user.getOtp().equals(userReg.getOtp())) {
+					user.setPassword(passEncDec.encrypt(userReg.getPassword()));
+					user.setStatus(1);
+					user.setOtp(null);
+					userRegRepo.save(user);
+					return "Success";
+				}
+				return "Please Enter Valid OTP";
+			}
+			return "OTP is Expired. Please regenerate OTP";
 		}
-		return false;
+		return "User dose not exist";
 	}
 
 	public UserRegistration userLogin(UserRegistration userReg) {
-		return userRegRepo.findByEmailAndPassword(userReg.getEmail(), userReg.getPassword());
+		UserRegistration user = userRegRepo.findByEmailAndPassword(userReg.getEmail(), passEncDec.encrypt(userReg.getPassword()));
+		if(user!=null)
+			user.setPassword(passEncDec.decrypt(user.getPassword())); 
+		return user;
 	}
 
-	public boolean resendOTP(UserRegistration userReg) {
+	public String resendOTP(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
-		try {
-			if (user.getOtp() != null) {
-				user.setOtp(generateOTP(6));
+		if(user!=null) {
+			try {
+				user.setOtp(otp.generateOTP(6, userReg.getEmail()));
 				String from = sender;
 				String to = userReg.getEmail();
 				String subject = "Forget Password";
 				String content = "Dear " + user.getName() + ", <br> Your forget password OTP is <br>" + "<h3>"
 						+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
-
-				sendMail(from, to, subject, content);
+				sendMail.sendMail(from, to, subject, content);
 				userRegRepo.save(user);
-				return true;
+				return "Success";
+			} catch (Exception e) {
+				return "Some problem is there. Please try again some time";
 			}
-			return true;
-		} catch (Exception e) {
-			return false;
 		}
+		return "Please Enter Valid Email ID";	
 	}
+
 }
