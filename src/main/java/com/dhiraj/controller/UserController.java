@@ -32,7 +32,7 @@ public class UserController {
 		this.session = session;
 	}
 	
-	@GetMapping("/getRoles")
+	@GetMapping("/viewRoles")
 	public List<Role> getRole(){
 		return userServ.getRole();
 	}
