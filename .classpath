@@ -53,16 +53,5 @@
 			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/dhira/.m2/repository/jakarta/inject/jakarta.inject-api/2.0.1/jakarta.inject-api-2.0.1.jar" sourcepath="C:/Users/dhira/.m2/repository/jakarta/inject/jakarta.inject-api/2.0.1/jakarta.inject-api-2.0.1-sources.jar">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="test" value="true"/>
-			<attribute name="javadoc_location" value="jar:file:/C:/Users/dhira/.m2/repository/jakarta/inject/jakarta.inject-api/2.0.1/jakarta.inject-api-2.0.1-javadoc.jar!/"/>
-			<attribute name="maven.groupId" value="jakarta.inject"/>
-			<attribute name="maven.artifactId" value="jakarta.inject-api"/>
-			<attribute name="maven.version" value="2.0.1"/>
-			<attribute name="maven.scope" value="runtime"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
