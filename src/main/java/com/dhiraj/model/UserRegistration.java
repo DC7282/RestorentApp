@@ -1,7 +1,5 @@
 package com.dhiraj.model;
 
-import java.text.SimpleDateFormat;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,24 +7,44 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
-public class UserRegistration {
-
+public class UserRegistration extends BaseEntity{
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(nullable = false)
-	private String name;
-	
-	@Column(nullable = false, unique = true)
+	@NotBlank(message = "First Name should not be blank")
+	private String firstName;
+
+	private String middleName;
+
+	@NotBlank(message = "Last Name should not be blank")
+	private String lastName;
+
+	@Email(message = "Enter Correct Email Address")
+	@Column(unique = true)
 	private String email;
 	
+	@Pattern(regexp = "^[0-9]{10}$", message = "Contact Number should be 10 digit only.")
 	@Column(nullable = false, unique = true)
 	private String contact;
 	
-	@Column(nullable = false)
+//	@Pattern(
+//	        regexp = "(?=^.{8,}$)(?=.*\\d)(?=.*\\W+)(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$",
+//	        message = "Password must be between 8 and 16 characters long, and include at least one uppercase letter, one lowercase letter, one number, and one special character."
+//	    )
+	
+	@Pattern(regexp = "(?=^.{8,}$).*$", message = "Password must be grater than 8 characters.")
+    @Pattern(regexp = "(?=.*[a-z]).*$", message = "Password must contain one lowercase letter.")
+    @Pattern(regexp = "(?=.*[A-Z]).*$", message = "Password must contain one uppercase letter.")
+    @Pattern(regexp = "(?=.*\\d).*$", message = "Password must contain one digit.")
+    @Pattern(regexp = "(?=.*\\W+).*$", message = "Password must contain one special character.")
+    @Pattern(regexp = "(?=\\S+$).*$", message = "Password must contain no whitespace.")
 	private String password;
 	
 	private String otp;
@@ -37,25 +55,24 @@ public class UserRegistration {
 	@ManyToOne
 	@JoinColumn(name = "role")
 	private Role role;
-
-	private String timeStamp = new SimpleDateFormat("dd-MM-yyyy HH:mm.ss").format(new java.util.Date());
-
+    
 	public UserRegistration() {
 		super();
 	}
 
-	public UserRegistration(Long id, String name, String email, String contact, String password, String otp, int status,
-			com.dhiraj.model.Role role, String timeStamp) {
+	public UserRegistration(Long id, String firstName, String middleName, String lastName, String email, String contact,
+			String password, String otp, int status, Role role) {
 		super();
 		this.id = id;
-		this.name = name;
+		this.firstName = firstName;
+		this.middleName = middleName;
+		this.lastName = lastName;
 		this.email = email;
 		this.contact = contact;
 		this.password = password;
 		this.otp = otp;
 		this.status = status;
 		this.role = role;
-		this.timeStamp = timeStamp;
 	}
 
 	public Long getId() {
@@ -66,13 +83,17 @@ public class UserRegistration {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
-	}
+	public String getFirstName() { return firstName; }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+	public void setFirstName(String firstName) { this.firstName = firstName; }
+
+	public String getMiddleName() {	return middleName; }
+
+	public void setMiddleName(String middleName) { this.middleName = middleName; }
+
+	public String getLastName() { return lastName; }
+
+	public void setLastName(String lastName) { this.lastName = lastName; }
 
 	public String getEmail() {
 		return email;
@@ -112,14 +133,6 @@ public class UserRegistration {
 
 	public void setStatus(int status) {
 		this.status = status;
-	}
-
-	public String getTimeStamp() {
-		return timeStamp;
-	}
-
-	public void setTimeStamp(String timeStamp) {
-		this.timeStamp = timeStamp;
 	}
 
 	public Role getRole() {

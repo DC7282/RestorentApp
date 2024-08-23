@@ -1,10 +1,11 @@
+
 package com.dhiraj.resources;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import com.dhiraj.model.UserRegistration;
@@ -16,24 +17,38 @@ public class OTPCleanup {
 	@Autowired
 	private UserRegistrationRepository userRegRepo;
 
+	@Value("${spring.mail.otp.cleanup.time}")
+	private int cleanupTime;
+
+	private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-	private String email;
 
 	public void cleanup(String email) {
-		scheduler.schedule(this::executeTask, 10, TimeUnit.MINUTES);
-		this.email = email;
+		cancelExistingTask(email);
+
+		ScheduledFuture<?> scheduledFuture = scheduler.schedule(() -> executeTask(email), cleanupTime, TimeUnit.MINUTES);
+		scheduledTasks.put(email, scheduledFuture);
 	}
 
-	private void executeTask() {
+	private void executeTask(String email) {
 		try {
 			UserRegistration user = userRegRepo.findByEmail(email);
-			if(user!=null)
-				if (user.getOtp() != null) {
-					user.setOtp(null);
-					userRegRepo.save(user);
-				}
+			if (user != null && user.getOtp() != null) {
+				user.setOtp(null);
+				userRegRepo.save(user);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			scheduledTasks.remove(email);
+		}
+	}
+
+	private void cancelExistingTask(String email) {
+		ScheduledFuture<?> existingTask = scheduledTasks.get(email);
+		if (existingTask != null) {
+			existingTask.cancel(true);
+			scheduledTasks.remove(email);
 		}
 	}
 }
