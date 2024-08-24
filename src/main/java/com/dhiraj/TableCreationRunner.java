@@ -19,10 +19,11 @@ public class TableCreationRunner implements CommandLineRunner{
 	public void run(String... args) throws Exception {
 		if (roleRepo.count() == 0) {
 			roleRepo.saveAll(List.of(
-					new Role(Long.valueOf(1),"ROLE_ADMIN"),
-		            new Role(Long.valueOf(2),"ROLE_MANAGER"),
-		            new Role(Long.valueOf(3),"ROLE_STAFF"),
-		            new Role(Long.valueOf(4),"ROLE_CANDIDATE")
+					new Role(Long.valueOf(1),"ADMIN"),
+		            new Role(Long.valueOf(2),"MANAGER"),
+		            new Role(Long.valueOf(3),"STAFF"),
+		            new Role(Long.valueOf(4),"DELIVERY_PARTNER"),
+		            new Role(Long.valueOf(4),"CANDIDATE")
           )); 
 		}
 	}

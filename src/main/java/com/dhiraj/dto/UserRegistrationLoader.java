@@ -1,51 +1,47 @@
-package com.dhiraj.model;
+package com.dhiraj.dto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.dhiraj.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-@Entity
-public class UserRegistration extends BaseEntity{
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UserRegistrationLoader extends BaseEntityLoader{
+
 	private Long id;
 	
+	@NotBlank(message = "First Name should not be blank")
 	private String firstName;
 
 	private String middleName;
 
+	@NotBlank(message = "Last Name should not be blank")
 	private String lastName;
 
-	@Column(unique = true)
+	@Email(message = "Enter Correct Email Address")
 	private String email;
 	
-	@Column(nullable = false, unique = true)
+	@Pattern(regexp = "^[0-9]{10}$", message = "Contact Number should be 10 digit only.")
 	private String contact;
-	
+		
+	@Pattern(regexp = "(?=^.{8,}$).*$", message = "Password must be grater than 8 characters.")
+    @Pattern(regexp = "(?=^..*[a-z]).*$", message = "Password must contain one lowercase letter.")
+    @Pattern(regexp = "(?=^.*[A-Z]).*$", message = "Password must contain one uppercase letter.")
+    @Pattern(regexp = "(?=^.*\\d).*$", message = "Password must contain one digit.")
+    @Pattern(regexp = "(?=^.*\\W+).*$", message = "Password must contain one special character.")
+    @Pattern(regexp = "(?=\\S+$).*$", message = "Password must contain no whitespace.")
 	private String password;
 	
 	private String otp;
 	
-	@Column(nullable = false)
 	private int status;
 
-	@ManyToOne
-	@JoinColumn(name = "role")
 	private Role role;
     
-	public UserRegistration() {
+	public UserRegistrationLoader() {
 		super();
 	}
 
-	public UserRegistration(Long id, String firstName, String middleName, String lastName, String email, String contact,
+	public UserRegistrationLoader(Long id, String firstName, String middleName, String lastName, String email, String contact,
 			String password, String otp, int status, Role role) {
 		super();
 		this.id = id;

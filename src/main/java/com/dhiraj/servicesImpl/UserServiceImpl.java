@@ -1,18 +1,13 @@
-package com.dhiraj.services;
+package com.dhiraj.servicesImpl;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import com.dhiraj.dto.ForgetPasswordLoader;
-import com.dhiraj.dto.LoginLoader;
-import com.dhiraj.dto.UserRegistrationLoader;
 import com.dhiraj.exception.OTPException;
 import com.dhiraj.exception.UnexpectedException;
 import com.dhiraj.exception.UserRegistrationOrLoginExcption;
-import com.dhiraj.mapper.UserRegistrationMapper;
 import com.dhiraj.model.Role;
 import com.dhiraj.model.UserRegistration;
 import com.dhiraj.repository.RoleRepository;
@@ -21,8 +16,7 @@ import com.dhiraj.resources.GenerateOTP;
 import com.dhiraj.resources.PasswordEncryptAndDecrypt;
 import com.dhiraj.resources.SendMail;
 
-@Service("userServ")
-public class UserService {
+public class UserServiceImpl {
 
 	@Autowired
 	private UserRegistrationRepository userRegRepo;
@@ -41,16 +35,12 @@ public class UserService {
 	
 	@Autowired
 	private PasswordEncryptAndDecrypt passEncDec;
-	
-	@Autowired
-	UserRegistrationMapper userRegMap;
 
 	public List<Role> getRole() {
 		return roleRepo.findAll();
 	}
 	
-	public UserRegistrationLoader saveData(UserRegistrationLoader userRegLoad) {
-		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration saveData(UserRegistration userReg) {
 		if (userRegRepo.findByEmail(userReg.getEmail()) == null) {
 			if (userRegRepo.findByContact(userReg.getContact()) == null) {
 				userReg.setOtp(otp.generateOTP(6, userReg.getEmail()));
@@ -64,7 +54,7 @@ public class UserService {
 							+ ", <br> Your account varification for Registration OTP is <br>" + "<h3>"
 							+ userReg.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
 					sendMail.sendMail(from, to, subject, content);
-						return userRegMap.userRegistrationToLoader(userRegRepo.save(userReg));
+						return userRegRepo.save(userReg);
 				} catch (Exception e) {
 					throw new UnexpectedException("Some problem is there. Please try again some time otp");
 				}
@@ -74,15 +64,14 @@ public class UserService {
 		throw new UserRegistrationOrLoginExcption("Email Already Exist");
 	}
 
-	public UserRegistrationLoader varifyAccount(UserRegistrationLoader userRegLoad) {
-		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration varifyAccount(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
 		if (user != null) {
 			if(user.getOtp() != null) {
 				if (user.getOtp().equals(userReg.getOtp())) {
 					user.setStatus(1);
 					user.setOtp(null);
-					return userRegMap.userRegistrationToLoader(userRegRepo.save(user));
+					return userRegRepo.save(user);
 				}
 				throw new OTPException("Please Enter Valid OTP");
 			}
@@ -91,8 +80,7 @@ public class UserService {
 		throw new OTPException("User dose not exist");
 	}
 
-	public UserRegistrationLoader forgetPassword(UserRegistrationLoader userRegLoad) {
-		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration forgetPassword(UserRegistration userReg) {
 		try {
 			UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
 			if(user!=null) {
@@ -103,7 +91,7 @@ public class UserService {
 				String content = "Dear " + user.getFirstName()+" "+user.getLastName() + ", <br> Your forget password OTP is <br>" + "<h3>"
 						+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
 				sendMail.sendMail(from, to, subject, content);
-				return userRegMap.userRegistrationToLoader(userRegRepo.save(user));	
+				return userRegRepo.save(user);	
 			}
 			throw new UserRegistrationOrLoginExcption("Please Check and enter valid Email ID");			
 		} catch (Exception e) {
@@ -111,26 +99,26 @@ public class UserService {
 		}
 	}
 
-	public UserRegistrationLoader forgetEmail(UserRegistrationLoader userRegLoad) {
-		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration forgetEmail(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByContact(userReg.getContact());
 		if(user!=null) {
-			return userRegMap.userRegistrationToLoader(user);
+			return user;
 		}
 		throw new UserRegistrationOrLoginExcption("Please enter valid Mobile No");
 		
 	}
 	
-	public UserRegistrationLoader forgetPasswordSet(ForgetPasswordLoader userReg) {
-//		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration forgetPasswordSet(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
+		System.out.println("outter "+user.getFirstName()+" "+user.getLastName()+" "+user.getContact());
 		if (user != null) {
 			if(user.getOtp() != null) {
 				if (user.getOtp().equals(userReg.getOtp())) {
 					user.setPassword(passEncDec.encrypt(userReg.getPassword()));
 					user.setStatus(1);
 					user.setOtp(null);
-					return userRegMap.userRegistrationToLoader(userRegRepo.save(user));
+					System.out.println("inner "+user.getFirstName()+" "+user.getLastName()+" "+user.getContact());
+					return userRegRepo.save(user);
 				}
 				throw new OTPException("Please Enter Valid OTP");
 			}
@@ -139,24 +127,27 @@ public class UserService {
 		throw new OTPException("User dose not exist");
 	}
 
-	public UserRegistrationLoader userLogin(LoginLoader loginLoad) {
+	public UserRegistration userLogin(UserRegistration userReg) {
+//		UserRegistration user = userRegRepo.findByEmailAndPassword(userReg.getEmail(), passEncDec.encrypt(userReg.getPassword()));
+//		if(user!=null)
+//			user.setPassword(passEncDec.decrypt(user.getPassword())); 
+//		return user;
+		
 		UserRegistration userData;
-		userData = userRegRepo.findByEmailOrContactAndPassword(loginLoad.getEmail(), loginLoad.getEmail(), passEncDec.encrypt(loginLoad.getPassword()));
-//		if(userData==null)
-//		userData = userRegRepo.findByContactAndPassword(loginLoad.getEmail(), passEncDec.encrypt(loginLoad.getPassword()));
+		userData = userRegRepo.findByEmailAndPassword(userReg.getEmail(), passEncDec.encrypt(userReg.getPassword()));
+		if(userData==null)
+		userData = userRegRepo.findByContactAndPassword(userReg.getEmail(), passEncDec.encrypt(userReg.getPassword()));
 
 		if (userData != null) {
 				if(userData.getStatus()==1) {
-					return userRegMap.userRegistrationToLoader(userData);
+					return userData;
 				}
-				
 				throw new OTPException("please verify your account with OTP That is sended on your Mail ID");
 		}
 		throw new UserRegistrationOrLoginExcption("Some problem is there please check your username and password");		
 	}
 
-	public UserRegistrationLoader resendOTP(UserRegistrationLoader userRegLoad) {
-		UserRegistration userReg = userRegMap.loaderToUserRegistration(userRegLoad);
+	public UserRegistration resendOTP(UserRegistration userReg) {
 		UserRegistration user = userRegRepo.findByEmail(userReg.getEmail());
 		if(user!=null) {
 			try {
@@ -167,12 +158,11 @@ public class UserService {
 				String content = "Dear " + user.getFirstName()+" "+user.getLastName() + ", <br> Your forget password OTP is <br>" + "<h3>"
 						+ user.getOtp() + "</h3>Thank you, <br>Dhiraj Chaudhary, <br>Mail Varification";
 				sendMail.sendMail(from, to, subject, content);
-				return userRegMap.userRegistrationToLoader(userRegRepo.save(user));
+				return userRegRepo.save(user);
 			} catch (Exception e) {
 				throw new UnexpectedException("Some problem is there. Please try again some time");
 			}
 		}
 		throw new UserRegistrationOrLoginExcption("Please Enter Valid Email ID");	
 	}
-
 }
