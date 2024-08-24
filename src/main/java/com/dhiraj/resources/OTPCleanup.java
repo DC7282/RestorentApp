@@ -2,16 +2,20 @@
 package com.dhiraj.resources;
 
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import com.dhiraj.model.UserRegistration;
 import com.dhiraj.repository.UserRegistrationRepository;
 
-@Configuration
+@Component
 public class OTPCleanup {
 
 	@Autowired

@@ -17,8 +17,8 @@ public abstract class BaseEntity implements Serializable{
 
 	@Id
 	@GeneratedValue
-	@Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false)
-	private UUID id;
+	@Column(updatable = false, nullable = false)
+	private Long id;
 
 	@CreationTimestamp
     @Column(updatable = false)
